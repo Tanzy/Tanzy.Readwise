@@ -1,0 +1,261 @@
+openapi: 3.0.0
+info:
+  title: readwise
+  version: 1.0.0
+paths:
+  '{{baseUrl}}/auth':
+    get:
+      summary: Authenticate
+      operationId: Authenticate
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+  '{{baseUrl}}/books/:id/tags':
+    post:
+      summary: Book Tag Create
+      operationId: Book Tag Create
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+    get:
+      summary: Book Tags List
+      operationId: Book Tags List
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+  '{{baseUrl}}/books/:id/tags/:tag_id':
+    delete:
+      summary: Book Tag Delete
+      operationId: Book Tag Delete
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+    patch:
+      summary: Book Tag Update
+      operationId: Book Tag Update
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+  '{{baseUrl}}/books/:id/tags/:tags_id':
+    get:
+      summary: Book Tag Detail
+      operationId: Book Tag Detail
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+  '{{baseUrl}}/books/:book_id/':
+    get:
+      summary: Books Detail
+      operationId: Books Detail
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+  '{{baseUrl}}/books':
+    get:
+      summary: Books List
+      operationId: Books List
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+  '{{baseUrl}}/review':
+    get:
+      summary: Daily Review LIST
+      operationId: Daily Review LIST
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+  '{{baseUrl}}/highlights/':
+    post:
+      summary: Highlight Create
+      operationId: Highlight Create
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+      parameters:
+        - name: Content-Type
+          in: header
+          description: ''
+          required: true
+      requestBody:
+        $ref: '#/components/requestBodies/highlight_create'
+  '{{baseUrl}}/highlights/:id':
+    delete:
+      summary: Highlight Delete
+      operationId: Highlight Delete
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+      parameters:
+        - name: Content-Type
+          in: header
+          description: ''
+          required: true
+    get:
+      summary: Highlight Detail
+      operationId: Highlight Detail
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+    patch:
+      summary: Highlight Update
+      operationId: Highlight Update
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+      parameters:
+        - name: Content-Type
+          in: header
+          description: ''
+          required: true
+      requestBody:
+        $ref: '#/components/requestBodies/highlight_update'
+  '{{baseUrl}}/export':
+    get:
+      summary: Highlight EXPORT
+      operationId: Highlight EXPORT
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+  '{{baseUrl}}/highlights':
+    get:
+      summary: Highlights List
+      operationId: Highlights List
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+  '{{baseUrl}}/highlights/:highlight_id/tags/':
+    post:
+      summary: Highlights Tag CREATE
+      operationId: Highlights Tag CREATE
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+      parameters:
+        - name: Content-Type
+          in: header
+          description: ''
+          required: true
+      requestBody:
+        $ref: '#/components/requestBodies/highlights_tag_create'
+  '{{baseUrl}}/highlights/:highlight_id/tags/:tag_id':
+    get:
+      summary: Highlights Tag DETAIL
+      operationId: Highlights Tag DETAIL
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+  '{{baseUrl}}/highlights/:id/tags':
+    get:
+      summary: Highlights Tags List
+      operationId: Highlights Tags List
+      description: ''
+      tags:
+        - ''
+      responses:
+        '200':
+          description: ''
+servers:
+  - url: ''
+components:
+  schemas:
+    highlight_create:
+      type: object
+      properties:
+        highlights:
+          type: array
+          items:
+            type: string
+          properties:
+            '0':
+              type: object
+              properties:
+                text:
+                  type: string
+                title:
+                  type: string
+                source_type:
+                  type: string
+    highlight_update:
+      type: object
+      properties:
+        text:
+          type: string
+    highlights_tag_create:
+      type: object
+      properties:
+        name:
+          type: string
+  requestBodies:
+    highlight_create:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/highlight_create'
+      description: ''
+      required: true
+    highlight_update:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/highlight_update'
+      description: ''
+      required: true
+    highlights_tag_create:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/highlights_tag_create'
+      description: ''
+      required: true
+  securitySchemes: {}
