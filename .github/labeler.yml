@@ -1,0 +1,9 @@
+# Add 'test' label to any change in the Tests directory
+test:
+  - Tests/**/*.cs
+  
+categories:
+  - src/**/Categories/*.cs
+ 
+workflow:
+  - .github/workflows/*.*

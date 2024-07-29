@@ -1,0 +1,139 @@
+name: Pull Request Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+env:
+  # Stop wasting time caching packages
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  # Disable sending usage data to Microsoft
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  # Project name to pack and publish
+  PROJECT_NAME: Tanzy.Readwise
+  # GitHub Packages Feed settings
+  # GITHUB_FEED: https://nuget.pkg.github.com/Tanzy/index.json
+  GITHUB_USER: Tanzy
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+jobs:
+
+  build:
+    name: Build and Test Project
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ] #, windows-latest, macos-latest ]
+
+    steps:
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin' # Alternative distribution options are available.
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # fetch-depth is needed for GitVersion
+
+      #Install and calculate the new version with GitVersion
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v3.0.0
+        with:
+          versionSpec: '5.x'
+
+      - name: Determine Version
+        uses: gittools/actions/gitversion/execute@v3.0.0
+        id: gitversion # step id used as reference for output values
+
+      - name: Display GitVersion outputs
+        run: |
+          echo "MajorMinorPatch ${{ steps.gitversion.outputs.majorMinorPatch }}"
+          echo "NuGetVersionV2: ${{ steps.gitversion.outputs.nuGetVersionV2 }}"
+          echo "CommitsSinceVersionSource: ${{ steps.gitversion.outputs.CommitsSinceVersionSource }}"
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '8.x'
+
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v3
+        with:
+          path: ~\sonar\cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: Cache SonarCloud scanner
+        id: cache-sonar-scanner
+        uses: actions/cache@v3
+        with:
+          path: .\.sonar\scanner
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: ${{ runner.os }}-sonar-scanner
+
+      - name: Install Sonar global tool
+        run: dotnet tool install --global dotnet-sonarscanner
+
+      - name: Install Code Coverage
+        run: dotnet tool install --global dotnet-coverage
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Begin Sonar scan
+        run: dotnet sonarscanner begin /k:"Tanzy_Tanzy.Readwise" /o:"tanzy" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /v:${{ steps.gitversion.outputs.semVer }} /d:sonar.cs.vscoveragexml.reportsPaths=coverage.cobertura.xml
+
+        # Build and test
+      - name: Build
+        run: dotnet build -c Release --no-restore -p:Version=${{ steps.gitversion.outputs.semVer }}
+
+      - name: Test
+        run: dotnet test Tests/**/**/*.csproj --no-restore -c Release --collect "XPlat Code Coverage"
+        #run: dotnet-coverage collect 'dotnet test' -f xml  -o 'coverage.xml'
+
+      - name: End Sonar scan
+        run: dotnet sonarscanner end /d:sonar.login=${{ secrets.SONAR_TOKEN }}
+
+      - name: Pack
+        if: matrix.os == 'ubuntu-latest'
+        run: dotnet pack -v normal -c Release --no-restore -p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersionV2 }} src/$PROJECT_NAME/$PROJECT_NAME.*proj
+
+      # Upload NuGet Package to Artifact store
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: nupkg
+          path: ./src/${{ env.PROJECT_NAME }}/bin/Release/*.nupkg
+          retention-days: 5
+
+
+# Label the Pull Request
+  label:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+    - uses: actions/labeler@v2
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+  # prerelease:
+  #   needs: build
+  #   if: github.ref == 'refs/heads/main'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Download Artifact
+  #       uses: actions/download-artifact@v1
+  #       with:
+  #         name: nupkg
+  #     - name: Add GitHub Feed
+  #       run: dotnet nuget add source --username $GITHUB_USER --password $GITHUB_TOKEN --store-password-in-clear-text --name github "$GITHUB_FEED"
+
+  #     - name: Push to GitHub Feed
+  #       run: echo "Deploy to GitHub" #dotnet nuget push ./nupkg/*.nupkg --api-key $GITHUB_TOKEN --skip-duplicate --source $GITHUB_FEED
